@@ -14,6 +14,9 @@
 - **Single Responsibility**: Each class/file should have one clear purpose.
 - **Testability**: Design components to be independently testable.
 
+## Permissions
+- **Bash commands**: Full permission to run any bash/terminal commands within the project folder (`E:\Random\Pet_projects\Fruitfly_finder`) without asking. This includes npm scripts, file operations, git commands, etc.
+
 ## Workflow Rules
 1. **Always refer to `memory-claude/app-design.md`** before writing any code to ensure alignment with planned features.
 2. **Document ALL changes in `memory-claude/architecture.md`**:
@@ -35,8 +38,13 @@
    - Inform user after completing each step
    - Wait for user permission before proceeding to next step
    - During a single step, proceed freely with all necessary edits without asking permission
+6. **Session handoff**:
+   - When user says they're stopping for the day, write `memory-claude/RESUME.md`
+   - Include: commands to run, current step, any context needed to continue
+   - Read this file at the start of each new session
 
 ## Key Files
 - `memory-claude/app-design.md` - Feature specifications and requirements
 - `memory-claude/implementation-plan.md` - Detailed implementation steps with tests
 - `memory-claude/architecture.md` - Progress documentation and completed work
+- `memory-claude/RESUME.md` - Session handoff notes (read this first when resuming)

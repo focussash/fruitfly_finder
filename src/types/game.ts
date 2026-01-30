@@ -9,11 +9,18 @@ export interface Fly {
 
 export interface Level {
   id: string;
+  name: string;
   imageUrl: string;
   flies: Fly[];
   theme: 'kitchen' | 'garden' | 'fantasy' | 'retro';
   difficulty: number;
   timeLimit: number;
+}
+
+export interface LevelProgress {
+  completed: boolean;
+  bestScore: number;
+  bestTime: number; // seconds remaining when completed
 }
 
 export interface GameState {

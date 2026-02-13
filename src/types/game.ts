@@ -32,9 +32,12 @@ export interface GameState {
   status: 'idle' | 'playing' | 'paused' | 'won' | 'lost';
 }
 
+export type GameMode = 'campaign' | 'endless' | 'multiplayer';
+
 export interface Settings {
   catchAnimation: 'cute' | 'wild';
   soundEnabled: boolean;
   musicEnabled: boolean;
   casualMode: boolean;  // extended timer
+  powerSlap: boolean;   // Hold longer for bigger catches and bonus points
 }

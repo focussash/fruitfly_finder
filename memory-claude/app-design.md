@@ -70,30 +70,33 @@ Players can choose their preferred animation style when finding a fly:
 
 | Mode | Description |
 |------|-------------|
-| **Cute Mode** (Default) | Fly sparkles, pops with particle effects, points float up with a cheerful sound |
-| **Wild Mode** | A hand swoops in and smacks the fly with a satisfying splat effect and sound |
+| **Cute Mode** (Default) | Pink pop burst, sparkle stars radiating out, floating hearts |
+| **Wild Mode** | Hand emoji swoops in, green splat effect, splat drops, "SPLAT!" impact text |
 
 - Toggle available in Settings menu
 - Persists across sessions (localStorage)
 - Can be changed mid-game without restart
+- **Power Slap scaling**: When Power Slap is enabled, all animation elements (particle count, sizes, travel distances, durations) scale with hold intensity (0→1). Quick taps give minimal animations; full 500ms holds give dramatic, oversized effects.
 
 ---
 
-## Image Generation Strategy
+## Image Sources
 
-Using **Gemini Pro** for AI image generation:
+### Default Images
+Levels use themed Unsplash images (8 per theme: kitchen, garden, fantasy, retro).
 
-### Generation Approach
-1. Create base scene prompts for each theme/difficulty
-2. Generate images with specific "hiding spots" in mind
-3. Programmatically overlay fly sprites at calculated positions
-4. Store fly positions as metadata for hit detection
+### Local Folder Picker
+Players can use their own images as level backgrounds:
+1. Settings → "Pick Local Folder..." → browser folder picker opens
+2. Select a folder containing image files (JPEG, PNG, WebP, GIF)
+3. Images are sorted alphabetically and assigned to levels
+4. If filename contains a theme name (e.g., "kitchen-sunset.jpg"), it's categorized to that theme
+5. "Reset" button reverts to Unsplash defaults
 
-### Alternative Hybrid Approach
-1. Generate scenic backgrounds with Gemini
-2. Use separate fly asset library for consistent recognition
-3. Composite flies into scenes with appropriate scaling/rotation
-4. Apply post-processing to blend flies naturally
+**Technical**: Uses `showDirectoryPicker` API (Chrome/Edge) with `<input webkitdirectory>` fallback (Firefox/Safari). Images loaded as `URL.createObjectURL()` — no upload needed.
+
+### Original Plan (Not Implemented)
+Gemini Pro AI image generation was originally planned but was replaced with the local folder picker approach for simplicity and offline support.
 
 ---
 
@@ -105,7 +108,16 @@ Using **Gemini Pro** for AI image generation:
 | Time bonus | +10 per second remaining |
 | Accuracy bonus | +50 if no misclicks |
 | Streak bonus | x1.5 multiplier for consecutive finds |
+| Power Slap bonus | x1.0–2.0 multiplier based on hold duration (requires toggle) |
 | Fly escaped | -50 per fly |
+
+### Power Slap
+- **Toggle**: Settings → "Power Slap" (off by default)
+- **Mechanic**: Hold mousedown on a fly. Longer hold (up to 500ms) = higher intensity (0–1)
+- **Score**: `intensityMultiplier = 1 + intensity * 1.0` → 1.0x to 2.0x applied to total
+- **Animation**: Particle count, burst size, travel distance, emoji size, and duration all scale with intensity
+- **No visual charge indicator** — player discovers the mechanic naturally
+- **Score popup**: Shows "x2.0 power!" line when intensity multiplier > 1.01
 
 ---
 
@@ -143,7 +155,7 @@ Using **Gemini Pro** for AI image generation:
 - Fly animation system (CSS/Canvas)
 - Leaderboard backend
 - User accounts (optional, for progress saving)
-- Settings persistence (localStorage)
+- Settings persistence (localStorage): animation style, sound, music, casual mode, power slap
 
 ---
 

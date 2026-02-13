@@ -96,8 +96,8 @@ body {
   100% {
     transform:
       translate(
-        calc(-50% + cos(var(--angle, 0)) * 50px),
-        calc(-50% + sin(var(--angle, 0)) * 50px)
+        calc(-50% + cos(var(--angle, 0)) * var(--travel, 50px)),
+        calc(-50% + sin(var(--angle, 0)) * var(--travel, 50px))
       )
       rotate(180deg)
       scale(0);

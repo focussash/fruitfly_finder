@@ -1,6 +1,7 @@
 // Fly.tsx - Fly sprite component with hit detection and escape animation
 
-import { MouseEvent, useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { POWER_SLAP_MAX_HOLD_MS } from '../../utils/scoring';
 
 interface FlyProps {
   id: string;
@@ -10,7 +11,7 @@ interface FlyProps {
   found: boolean;
   escaped?: boolean;
   escapeDelay?: number; // ms delay before escape animation starts
-  onClick?: (id: string) => void;
+  onClick?: (id: string, intensity: number) => void;
   onEscapeComplete?: (id: string) => void;
   debug?: boolean;
 }
@@ -32,6 +33,7 @@ export function Fly({
 }: FlyProps) {
   const actualSize = BASE_SIZE * size;
   const [escapePhase, setEscapePhase] = useState<'idle' | 'buzzing' | 'flying' | 'gone'>('idle');
+  const pointerDownTime = useRef<number | null>(null);
 
   // Reset escape phase when escaped prop changes to false (game reset)
   useEffect(() => {
@@ -75,12 +77,31 @@ export function Fly({
     }
   }, [escapePhase, id, onEscapeComplete]);
 
-  const handleClick = (e: MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (found || escapePhase !== 'idle') return;
     e.stopPropagation();
-    if (!found && escapePhase === 'idle' && onClick) {
-      onClick(id);
+    e.preventDefault();
+    pointerDownTime.current = Date.now();
+    // Capture so pointerup fires even if finger drifts slightly
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [found, escapePhase]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!pointerDownTime.current || found || escapePhase !== 'idle' || !onClick) {
+      pointerDownTime.current = null;
+      return;
     }
-  };
+    const holdDuration = Date.now() - pointerDownTime.current;
+    pointerDownTime.current = null;
+    const intensity = Math.min(holdDuration / POWER_SLAP_MAX_HOLD_MS, 1);
+    onClick(id, intensity);
+  }, [found, escapePhase, onClick, id]);
+
+  const handlePointerCancel = useCallback(() => {
+    pointerDownTime.current = null;
+  }, []);
 
   // Don't render if gone
   if (escapePhase === 'gone') {
@@ -119,8 +140,11 @@ export function Fly({
         height: `${actualSize}px`,
         transform: getTransform(),
         opacity: escapePhase === 'flying' ? 0 : undefined,
+        touchAction: 'none',
       }}
-      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
     >
       {/* Fly sprite - using SVG for crisp rendering */}
       <svg

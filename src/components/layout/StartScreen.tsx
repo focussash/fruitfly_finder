@@ -2,10 +2,14 @@
 
 interface StartScreenProps {
   onStart: () => void;
+  onEndless: () => void;
+  onMultiplayer: () => void;
   onSettings: () => void;
+  endlessHighScore?: number;
+  endlessBestRound?: number;
 }
 
-export function StartScreen({ onStart, onSettings }: StartScreenProps) {
+export function StartScreen({ onStart, onEndless, onMultiplayer, onSettings, endlessHighScore = 0, endlessBestRound = 0 }: StartScreenProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 p-8">
       <div className="text-center">
@@ -34,7 +38,24 @@ export function StartScreen({ onStart, onSettings }: StartScreenProps) {
           onClick={onStart}
           className="px-8 py-4 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-xl transition-colors shadow-lg hover:shadow-xl"
         >
-          Play
+          Campaign
+        </button>
+        <button
+          onClick={onEndless}
+          className="px-8 py-4 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xl transition-colors shadow-lg hover:shadow-xl"
+        >
+          Endless Mode
+        </button>
+        {endlessHighScore > 0 && (
+          <div className="text-center text-sm text-gray-400">
+            Best: {endlessHighScore.toLocaleString()} pts (Round {endlessBestRound})
+          </div>
+        )}
+        <button
+          onClick={onMultiplayer}
+          className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-xl transition-colors shadow-lg hover:shadow-xl"
+        >
+          Multiplayer
         </button>
         <button
           onClick={onSettings}

@@ -1,13 +1,13 @@
 // GameCanvas.tsx - Main game area component with responsive image and click detection
 
-import { useState, useRef, useCallback, useEffect, MouseEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 import { Fly } from './Fly';
 import type { Fly as FlyType } from '../../types/game';
 
 interface GameCanvasProps {
   imageUrl?: string;
   flies?: FlyType[];
-  onFlyClick?: (flyId: string) => void;
+  onFlyClick?: (flyId: string, intensity: number) => void;
   onMiss?: (x: number, y: number) => void;
   onFlyEscapeComplete?: (flyId: string) => void;
   escapeDelays?: Record<string, number>;  // Staggered escape delays per fly
@@ -121,8 +121,8 @@ export function GameCanvas({
     }
   }, [calculateImageLayout, onMiss]);
 
-  const handleFlyClick = useCallback((flyId: string) => {
-    onFlyClick?.(flyId);
+  const handleFlyClick = useCallback((flyId: string, intensity: number) => {
+    onFlyClick?.(flyId, intensity);
   }, [onFlyClick]);
 
   const handleImageLoad = useCallback(() => {

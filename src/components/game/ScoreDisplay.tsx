@@ -105,6 +105,9 @@ function ScorePopupItem({ popup, onComplete }: ScorePopupItemProps) {
           {hasStreak && (
             <div className="text-yellow-400">x{breakdown.streakMultiplier} streak!</div>
           )}
+          {breakdown.intensityMultiplier > 1.01 && (
+            <div className="text-purple-400">x{breakdown.intensityMultiplier.toFixed(1)} power!</div>
+          )}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ const defaultSettings: Settings = {
   soundEnabled: true,
   musicEnabled: true,
   casualMode: false,
+  powerSlap: false,
 };
 
 function loadSettings(): Settings {

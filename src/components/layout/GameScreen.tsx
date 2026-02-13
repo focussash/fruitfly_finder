@@ -1,10 +1,12 @@
 // GameScreen.tsx - Main game screen layout during playing/paused states
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Timer } from '../game/Timer';
 import { ScoreDisplay } from '../game/ScoreDisplay';
 
 interface GameScreenProps {
+  levelNumber: number;
+  levelName: string;
   score: number;
   streak: number;
   foundCount: number;
@@ -17,9 +19,20 @@ interface GameScreenProps {
   casualMode: boolean;
   onPause: () => void;
   children: ReactNode; // Game canvas area
+  // Endless mode props
+  isEndless?: boolean;
+  lives?: number;
+  totalScore?: number;
+  // Multiplayer props
+  isMultiplayer?: boolean;
+  opponentName?: string;
+  opponentFoundCount?: number;
+  opponentFinished?: boolean;
 }
 
 export function GameScreen({
+  levelNumber,
+  levelName,
   score,
   streak,
   foundCount,
@@ -32,13 +45,37 @@ export function GameScreen({
   casualMode,
   onPause,
   children,
+  isEndless = false,
+  lives = 0,
+  totalScore = 0,
+  isMultiplayer = false,
+  opponentName,
+  opponentFoundCount = 0,
+  opponentFinished = false,
 }: GameScreenProps) {
   return (
     <div className="flex-1 min-h-0 flex flex-col p-4">
       {/* Game header */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        {/* Left: Score display */}
-        <ScoreDisplay score={score} streak={streak} />
+        {/* Left: Level info + Score */}
+        <div className="flex items-center gap-4">
+          <div className="bg-black/30 rounded-lg px-3 py-1">
+            <div className="text-xs text-white/60">
+              {isEndless ? `Round ${levelNumber}` : `Level ${levelNumber}`}
+            </div>
+            <div className="text-sm font-semibold text-white">{levelName}</div>
+          </div>
+          {isEndless && (
+            <div className="bg-black/30 rounded-lg px-3 py-1">
+              <div className="text-xs text-white/60">Lives</div>
+              <div className="text-sm font-semibold text-red-400">
+                {'❤️'.repeat(Math.max(0, lives))}
+                {lives <= 0 && <span className="text-gray-500">None</span>}
+              </div>
+            </div>
+          )}
+          <ScoreDisplay score={isEndless ? totalScore + score : score} streak={streak} />
+        </div>
 
         {/* Center: Stats */}
         <div className="text-center">
@@ -53,6 +90,14 @@ export function GameScreen({
           </div>
           {casualMode && (
             <div className="text-xs text-yellow-300">Casual Mode</div>
+          )}
+          {isMultiplayer && opponentName && (
+            <div className="mt-1 bg-blue-900/40 rounded px-2 py-1">
+              <div className="text-xs text-blue-300">
+                {opponentName}: {opponentFoundCount}/{totalFlies} found
+                {opponentFinished && <span className="text-yellow-400 ml-1">(done)</span>}
+              </div>
+            </div>
           )}
         </div>
 

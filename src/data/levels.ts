@@ -1,104 +1,148 @@
-// levels.ts - Static level data for the game
+// levels.ts - Level data with dynamic generation based on difficulty and worlds
 
-import type { Level } from '../types/game';
+import type { Level, Fly } from '../types/game';
+import { getDifficultyForLevel, getEndlessDifficulty } from '../utils/difficulty';
+import { getImageForLevel } from '../services/imageSource';
+import { getWorldForLevel, TOTAL_LEVELS } from './worlds';
 
-// Helper to create fly data (found/escaped always start false)
-const fly = (id: string, x: number, y: number, size = 1) => ({
-  id,
-  x,
-  y,
-  size,
-  found: false,
-  escaped: false,
-});
+// Level names by theme
+const levelNames: Record<string, string[]> = {
+  kitchen: [
+    'Kitchen Chaos', 'Counter Strike', 'Pantry Panic', 'Fridge Frenzy',
+    'Sink Surprise', 'Oven Outbreak', 'Cupboard Crisis', 'Table Trouble',
+  ],
+  garden: [
+    'Garden Party', 'Flower Frenzy', 'Veggie Venture', 'Greenhouse Getaway',
+    'Patio Pursuit', 'Hedge Hunt', 'Pond Patrol', 'Orchard Ordeal',
+  ],
+  fantasy: [
+    'Enchanted Forest', 'Mystic Meadow', 'Crystal Cave', 'Dragon\'s Den',
+    'Fairy Glen', 'Wizard\'s Tower', 'Starlight Summit', 'Ancient Ruins',
+  ],
+  retro: [
+    'Arcade Alley', 'Pixel Paradise', 'Neon Nights', 'Game Room',
+    'Console Corner', 'Retro Realm', 'Vintage Vibes', 'High Score Hall',
+  ],
+};
 
-export const levels: Level[] = [
-  // Level 1 - Kitchen (Easy)
-  {
-    id: 'level-1',
-    name: 'Kitchen Chaos',
-    imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
-    theme: 'kitchen',
-    difficulty: 1,
-    timeLimit: 30,
-    flies: [
-      fly('1-1', 25, 40, 1.2),
-      fly('1-2', 70, 30, 1.1),
-      fly('1-3', 50, 70, 1.0),
-    ],
-  },
+// Seeded random number generator for consistent fly placement
+function seededRandom(seed: number): () => number {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
 
-  // Level 2 - Kitchen (Easy)
-  {
-    id: 'level-2',
-    name: 'Counter Strike',
-    imageUrl: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800&q=80',
-    theme: 'kitchen',
-    difficulty: 1,
-    timeLimit: 30,
-    flies: [
-      fly('2-1', 15, 55, 1.1),
-      fly('2-2', 80, 25, 1.0),
-      fly('2-3', 45, 80, 1.2),
-      fly('2-4', 60, 45, 0.9),
-    ],
-  },
+// Generate fly positions that don't overlap and stay within bounds
+function generateFlyPositions(
+  count: number,
+  minSize: number,
+  maxSize: number,
+  seed: number
+): Omit<Fly, 'found' | 'escaped'>[] {
+  const random = seededRandom(seed);
+  const flies: Omit<Fly, 'found' | 'escaped'>[] = [];
+  const minDistance = 12;
+  const margin = 10;
 
-  // Level 3 - Garden (Medium)
-  {
-    id: 'level-3',
-    name: 'Garden Party',
-    imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
-    theme: 'garden',
-    difficulty: 2,
-    timeLimit: 30,
-    flies: [
-      fly('3-1', 20, 35, 1.0),
-      fly('3-2', 75, 60, 0.9),
-      fly('3-3', 40, 75, 1.1),
-      fly('3-4', 85, 20, 1.0),
-      fly('3-5', 55, 45, 0.8),
-    ],
-  },
+  for (let i = 0; i < count; i++) {
+    let attempts = 0;
+    let x: number, y: number, size: number;
 
-  // Level 4 - Garden (Medium)
-  {
-    id: 'level-4',
-    name: 'Flower Frenzy',
-    imageUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=800&q=80',
-    theme: 'garden',
-    difficulty: 2,
-    timeLimit: 25,
-    flies: [
-      fly('4-1', 30, 25, 0.9),
-      fly('4-2', 65, 70, 1.0),
-      fly('4-3', 15, 60, 1.1),
-      fly('4-4', 80, 40, 0.85),
-      fly('4-5', 50, 50, 1.0),
-    ],
-  },
+    do {
+      x = margin + random() * (100 - 2 * margin);
+      y = margin + random() * (100 - 2 * margin);
+      size = minSize + random() * (maxSize - minSize);
+      attempts++;
 
-  // Level 5 - Fantasy (Hard)
-  {
-    id: 'level-5',
-    name: 'Enchanted Forest',
-    imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
-    theme: 'fantasy',
-    difficulty: 3,
-    timeLimit: 25,
-    flies: [
-      fly('5-1', 22, 30, 0.85),
-      fly('5-2', 78, 55, 0.9),
-      fly('5-3', 45, 80, 1.0),
-      fly('5-4', 60, 25, 0.8),
-      fly('5-5', 35, 55, 0.95),
-      fly('5-6', 85, 75, 0.9),
-    ],
-  },
-];
+      const tooClose = flies.some(f => {
+        const dx = f.x - x;
+        const dy = f.y - y;
+        return Math.sqrt(dx * dx + dy * dy) < minDistance;
+      });
+
+      if (!tooClose || attempts > 50) {
+        flies.push({ id: `fly-${i + 1}`, x, y, size });
+        break;
+      }
+    } while (attempts < 50);
+  }
+
+  return flies;
+}
+
+// Get difficulty stars (1-3) based on position in world
+function getStarsForLevel(levelNumber: number): number {
+  const world = getWorldForLevel(levelNumber);
+  if (!world) return 1;
+
+  const posInWorld = levelNumber - world.levelRange.start;
+  if (posInWorld < 3) return 1;
+  if (posInWorld < 6) return 2;
+  return 3;
+}
+
+// Generate a single level
+function generateLevel(
+  levelNumber: number,
+  localImages?: { all: string[]; byTheme: Record<string, string[]> }
+): Level {
+  const world = getWorldForLevel(levelNumber);
+  const theme = world?.theme || 'kitchen';
+  const difficulty = getDifficultyForLevel(levelNumber);
+
+  // Get image URL
+  const imageUrl = getImageForLevel(levelNumber, theme, localImages);
+
+  // Pick name based on level position within world
+  const names = levelNames[theme] || levelNames.kitchen;
+  const posInWorld = world ? (levelNumber - world.levelRange.start) : (levelNumber - 1);
+  const nameIndex = posInWorld % names.length;
+  const name = names[nameIndex];
+
+  // Generate fly positions
+  const flyData = generateFlyPositions(
+    difficulty.flyCount,
+    difficulty.minFlySize,
+    difficulty.maxFlySize,
+    levelNumber * 12345
+  );
+
+  const flies: Fly[] = flyData.map(f => ({
+    ...f,
+    found: false,
+    escaped: false,
+  }));
+
+  return {
+    id: `level-${levelNumber}`,
+    name,
+    imageUrl,
+    theme,
+    difficulty: getStarsForLevel(levelNumber),
+    timeLimit: difficulty.timeLimit,
+    flies,
+  };
+}
+
+// Generate all 32 levels with default images
+export let levels: Level[] = Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i + 1));
+
+// Regenerate levels with local images
+export function regenerateLevelsWithImages(
+  localImages: { all: string[]; byTheme: Record<string, string[]> }
+): void {
+  levels = Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i + 1, localImages));
+}
 
 export function getLevelById(id: string): Level | undefined {
   return levels.find(level => level.id === id);
+}
+
+export function getLevelsForWorld(worldId: string): Level[] {
+  const worldIndex = parseInt(worldId.split('-')[1]) - 1;
+  const startIndex = worldIndex * 8;
+  return levels.slice(startIndex, startIndex + 8);
 }
 
 export function getNextLevel(currentId: string): Level | undefined {
@@ -111,4 +155,50 @@ export function getNextLevel(currentId: string): Level | undefined {
 
 export function isLastLevel(levelId: string): boolean {
   return levels[levels.length - 1].id === levelId;
+}
+
+export function isLastLevelInWorld(levelId: string): boolean {
+  const levelNum = getLevelNumber(levelId);
+  const world = getWorldForLevel(levelNum);
+  return world ? levelNum === world.levelRange.end : false;
+}
+
+export function getLevelNumber(levelId: string): number {
+  const index = levels.findIndex(level => level.id === levelId);
+  return index + 1;
+}
+
+// Generate a level for endless mode
+export function generateEndlessLevel(round: number): Level {
+  const difficulty = getEndlessDifficulty(round);
+
+  const themeNames = levelNames[difficulty.theme] || levelNames.kitchen;
+  const name = themeNames[(round - 1) % themeNames.length];
+
+  // Cycle through 8 images per theme
+  const imageIndex = ((round - 1) % 8) + 1;
+  const imageUrl = getImageForLevel(imageIndex, difficulty.theme);
+
+  const flyData = generateFlyPositions(
+    difficulty.flyCount,
+    difficulty.minFlySize,
+    difficulty.maxFlySize,
+    round * 54321 // Different seed from campaign
+  );
+
+  const flies: Fly[] = flyData.map(f => ({
+    ...f,
+    found: false,
+    escaped: false,
+  }));
+
+  return {
+    id: `endless-${round}`,
+    name,
+    imageUrl,
+    theme: difficulty.theme,
+    difficulty: Math.min(3, 1 + Math.floor((round - 1) / 10)),
+    timeLimit: difficulty.timeLimit,
+    flies,
+  };
 }

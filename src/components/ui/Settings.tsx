@@ -6,9 +6,12 @@ interface SettingsProps {
   settings: SettingsType;
   onUpdateSetting: <K extends keyof SettingsType>(key: K, value: SettingsType[K]) => void;
   onClose?: () => void;
+  onPickLocalFolder?: () => void;
+  onClearLocalImages?: () => void;
+  localImagesLoaded?: boolean;
 }
 
-export function Settings({ settings, onUpdateSetting, onClose }: SettingsProps) {
+export function Settings({ settings, onUpdateSetting, onClose, onPickLocalFolder, onClearLocalImages, localImagesLoaded }: SettingsProps) {
   return (
     <div className="bg-gray-800/95 rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-700">
       <div className="flex justify-between items-center mb-6">
@@ -101,6 +104,50 @@ export function Settings({ settings, onUpdateSetting, onClose }: SettingsProps) 
             onChange={(value) => onUpdateSetting('casualMode', value)}
           />
         </div>
+
+        {/* Power Slap Toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="block text-sm font-medium text-gray-300">
+              Power Slap
+            </label>
+            <p className="text-xs text-gray-400">Hold longer for bigger catches and bonus points</p>
+          </div>
+          <ToggleSwitch
+            enabled={settings.powerSlap}
+            onChange={(value) => onUpdateSetting('powerSlap', value)}
+          />
+        </div>
+
+        {/* Background Images (Folder Picker) */}
+        {onPickLocalFolder && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Background Images
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={onPickLocalFolder}
+                className="flex-1 py-2 px-4 rounded-lg font-semibold transition-all bg-blue-600 hover:bg-blue-500 text-white text-sm"
+              >
+                {localImagesLoaded ? 'Change Folder...' : 'Pick Local Folder...'}
+              </button>
+              {localImagesLoaded && onClearLocalImages && (
+                <button
+                  onClick={onClearLocalImages}
+                  className="py-2 px-4 rounded-lg font-semibold transition-all bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {localImagesLoaded
+                ? 'Custom images loaded. Click "Reset" to revert to defaults.'
+                : 'Select a folder with images to use as level backgrounds'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

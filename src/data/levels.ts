@@ -125,6 +125,9 @@ function generateLevel(
   };
 }
 
+// Track current local images at module level so all generation functions can use them
+let currentLocalImages: { all: string[]; byTheme: Record<string, string[]> } | undefined;
+
 // Generate all 32 levels with default images
 export let levels: Level[] = Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i + 1));
 
@@ -132,7 +135,8 @@ export let levels: Level[] = Array.from({ length: TOTAL_LEVELS }, (_, i) => gene
 export function regenerateLevelsWithImages(
   localImages: { all: string[]; byTheme: Record<string, string[]> }
 ): void {
-  levels = Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i + 1, localImages));
+  currentLocalImages = localImages.all.length > 0 ? localImages : undefined;
+  levels = Array.from({ length: TOTAL_LEVELS }, (_, i) => generateLevel(i + 1, currentLocalImages));
 }
 
 export function getLevelById(id: string): Level | undefined {
@@ -177,7 +181,7 @@ export function generateEndlessLevel(round: number): Level {
 
   // Cycle through 8 images per theme
   const imageIndex = ((round - 1) % 8) + 1;
-  const imageUrl = getImageForLevel(imageIndex, difficulty.theme);
+  const imageUrl = getImageForLevel(imageIndex, difficulty.theme, currentLocalImages);
 
   const flyData = generateFlyPositions(
     difficulty.flyCount,

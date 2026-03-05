@@ -90,6 +90,7 @@ function App() {
   const [catchAnimations, setCatchAnimations] = useState<CatchAnimationData[]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [localImagesLoaded, setLocalImagesLoaded] = useState(false)
+  const [levelsVersion, setLevelsVersion] = useState(0)
 
   // Folder picker callbacks for local images
   const handlePickLocalFolder = useCallback(async () => {
@@ -98,6 +99,7 @@ function App() {
       console.log(`[Images] Loaded ${result.all.length} local images`)
       regenerateLevelsWithImages(result)
       setLocalImagesLoaded(true)
+      setLevelsVersion(v => v + 1)
     }
   }, [])
 
@@ -106,6 +108,7 @@ function App() {
     clearImageCache()
     regenerateLevelsWithImages({ all: [], byTheme: {} })
     setLocalImagesLoaded(false)
+    setLevelsVersion(v => v + 1)
   }, [])
 
   // Multiplayer: auto-start game when server assigns a level
@@ -393,10 +396,10 @@ function App() {
     }
   }, [game.status]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Get levels for selected world
+  // Get levels for selected world (re-derive when levels are regenerated with new images)
   const worldLevels = useMemo(() => {
     return selectedWorld ? getLevelsForWorld(selectedWorld.id) : []
-  }, [selectedWorld])
+  }, [selectedWorld, levelsVersion])
 
   // Render content based on screen
   const renderContent = () => {

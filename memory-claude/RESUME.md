@@ -19,11 +19,15 @@
 
 ## Startup Commands
 
+**On pickup, always start these automatically (run in background):**
+
 ```bash
 cd E:\Random\Pet_projects\Fruitfly_finder
-npm run server    # Start multiplayer server (port 3001) — now prints LAN IP
-npm run dev       # Start Vite dev server — now shows Network URL for LAN
+npm run dev       # Start Vite dev server (port 5173) — run this first, always
+npm run server    # Start multiplayer server (port 3001) — only needed for multiplayer testing
 ```
+
+At minimum, always start `npm run dev` so the user can immediately view/test the app.
 
 ## What Was Just Done (Latest Session)
 
